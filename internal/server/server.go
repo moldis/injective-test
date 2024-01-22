@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -79,6 +80,14 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	s.multi[uuid.NewString()] = queueMsg
 	s.mutex.Unlock()
 
+	var currency []string
+	queryMap := r.URL.Query()
+	for k, v := range queryMap {
+		if strings.EqualFold(k, "currency") {
+			currency = append(currency, v...)
+		}
+	}
+
 	if r.URL.Query().Has("since_date") {
 		since := r.URL.Query().Get("since_date")
 		d, err := strconv.Atoi(since)
@@ -93,7 +102,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			log.Err(err).Msgf("something wrong with legacy data %v", err)
 		}
 		for _, rate := range legacy {
-			err = s.sendReceivedPrice(conn, rate)
+			err = s.sendReceivedPrice(conn, rate, currency)
 			if err != nil {
 				log.Err(err).Msgf("something wrong with connections %v", err)
 				conn.Close()
@@ -106,22 +115,40 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		select {
 		case rate := <-queueMsg:
 			log.Info().Msgf("received rate %v", rate)
-			err = s.sendReceivedPrice(conn, rate)
+			err = s.sendReceivedPrice(conn, rate, currency)
 		case errMsg := <-s.errorCh:
 			log.Err(errMsg).Msgf("something goes wrong with channel")
 		}
 	}
 }
 
-func (s *Server) sendReceivedPrice(conn *websocket.Conn, rate *model.CurrentPrice) error {
+func (s *Server) sendReceivedPrice(conn *websocket.Conn, rate *model.CurrentPrice, currency []string) error {
 	type PriceMsg struct {
 		TimeDate time.Time `json:"timedate"`
-		Price    float64   `json:"price"`
+		Price    float64   `json:"price,omitempty"`
+		PriceUSD float64   `json:"price_usd,omitempty"`
+		PriceEUR float64   `json:"price_eur,omitempty"`
+		PriceGBP float64   `json:"price_gbp,omitempty"`
 	}
 	message := PriceMsg{
 		TimeDate: rate.Time.UpdatedISO,
 		Price:    rate.Bpi.Usd.RateFloat,
 	}
+
+	for _, cur := range currency {
+		if strings.EqualFold(cur, "usd") {
+			message.PriceUSD = rate.Bpi.Usd.RateFloat
+		}
+
+		if strings.EqualFold(cur, "eur") {
+			message.PriceEUR = rate.Bpi.Eur.RateFloat
+		}
+
+		if strings.EqualFold(cur, "gbp") {
+			message.PriceGBP = rate.Bpi.Gbp.RateFloat
+		}
+	}
+
 	marshalled, err := json.Marshal(message)
 	if err != nil {
 		log.Err(err).Msg("error marshaling structure")
