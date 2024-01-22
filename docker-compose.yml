@@ -7,3 +7,20 @@ services:
    restart: unless-stopped
    ports:
      - "8080:8080"
+   depends_on:
+     - mongodb
+
+  mongodb:
+    image: mongo:5.0.2
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=fetcher
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - db:/data/db
+    ports:
+      - '27017-27019:27017-27019'
+
+volumes:
+  db:

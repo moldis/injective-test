@@ -18,6 +18,8 @@ type Config struct {
 	LogLevel      string `env:"LOG_LEVEL" envDefault:"debug"`
 	Listen        string `env:"LISTEN" envDefault:"0.0.0.0:8080"`
 	FetchInterval int    `env:"FETCH_INTERVAL" envDefault:"5"`
+	MongoDBURL    string `env:"MONGODB_URI" envDefault:"mongodb://admin:password@mongodb:27017"`
+	DBName        string `env:"DB_NAME" envDefault:"fetcher"`
 }
 
 // New initializes a new instance of Config and performs some setup tasks.

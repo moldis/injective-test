@@ -10,9 +10,7 @@ type CurrentPrice struct {
 }
 
 type CurrentPriceTime struct {
-	Updated    string    `json:"updated"` // TODO might be good to code custom Unmarshal
 	UpdatedISO time.Time `json:"updatedISO"`
-	Updateduk  string    `json:"updateduk"` // TODO might be good to code custom Unmarshal
 }
 
 type CurrentPriceBpi struct {
