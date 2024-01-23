@@ -3,7 +3,9 @@ package main
 import (
 	"code.injective.org/service/pricefetcher/internal/client"
 	"code.injective.org/service/pricefetcher/internal/repository"
+	"code.injective.org/service/pricefetcher/internal/server"
 	"context"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -11,8 +13,6 @@ import (
 	"code.injective.org/service/pricefetcher/internal/client/provider"
 	"code.injective.org/service/pricefetcher/internal/config"
 	"code.injective.org/service/pricefetcher/internal/model"
-	"code.injective.org/service/pricefetcher/internal/server"
-	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -50,8 +50,25 @@ func main() {
 
 	// run fetcher to receive prices
 	pricesRepo := repository.NewPrices(db)
-	fetcher := client.NewPriceFetcher(pricesRepo, coin, cfg.FetchInterval)
+	fetcher := client.NewPriceFetcher(pricesRepo, coin, cfg.FetchInterval, true)
 	go fetcher.RunPriceFetcher(ctx, receiver, errors)
+
+	// optionally run GRPC
+	// commented since Postman can't test it
+	/*
+		listener, err := net.Listen("tcp", cfg.GRPCListen)
+		if err != nil {
+			panic(err)
+		}
+		grpcServer := srvGrpc.NewPricesServer(receiver, errors, cfg, pricesRepo)
+		s := grpc.NewServer()
+		pb.RegisterPricesStreamingServiceServer(s, grpcServer)
+		go func() {
+			if err := s.Serve(listener); err != nil {
+				panic("error building server: " + err.Error())
+			}
+		}()
+	*/
 
 	// run ws
 	srv, err := server.NewServer(receiver, errors, cfg, pricesRepo)

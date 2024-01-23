@@ -5,6 +5,12 @@ fmt:
 	@markdownlint --fix --quiet --config .markdownlint.yaml .
 .PHONY: fmt
 
+grpc: ### Generate gRPC code
+	@protoc --go_out=. --go_opt=paths=source_relative \
+    	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    	proto/prices/prices.proto
+	@echo "gRPC files generated in ./proto/"
+
 up:
 	docker-compose up -d
 

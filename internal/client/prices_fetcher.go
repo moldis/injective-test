@@ -14,20 +14,22 @@ type PriceProvider interface {
 }
 
 type PriceFetcher interface {
-	RunPriceFetcher(ctx context.Context, fetcher PriceProvider, receiver chan *model.CurrentPrice, errors chan error)
+	RunPriceFetcher(ctx context.Context, fetcher PriceProvider, receiver chan *model.CurrentPrice, errors chan error, saveData bool)
 }
 
 type priceFetcher struct {
 	pricesRepo     repository.Prices
 	fetcher        PriceProvider
 	tickerInterval int
+	saveData       bool
 }
 
-func NewPriceFetcher(pricesRepo repository.Prices, fetcher PriceProvider, tickerInterval int) *priceFetcher {
+func NewPriceFetcher(pricesRepo repository.Prices, fetcher PriceProvider, tickerInterval int, saveData bool) *priceFetcher {
 	return &priceFetcher{
 		pricesRepo:     pricesRepo,
 		fetcher:        fetcher,
 		tickerInterval: tickerInterval,
+		saveData:       saveData,
 	}
 }
 
@@ -48,9 +50,11 @@ func (p *priceFetcher) RunPriceFetcher(ctx context.Context, receiver chan *model
 
 			// we can run it in separate go routine
 			log.Info().Msgf("received price %v", price)
-			err = p.pricesRepo.Create(ctx, price)
-			if err != nil {
-				log.Err(err).Msg("error saving to DB")
+			if p.saveData {
+				err = p.pricesRepo.Create(ctx, price)
+				if err != nil {
+					log.Err(err).Msg("error saving to DB")
+				}
 			}
 
 			// if nobody read it, it will stack, so using unblocking writes

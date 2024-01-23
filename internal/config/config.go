@@ -2,13 +2,14 @@
 package config
 
 import (
+	"os"
+
 	"github.com/caarlos0/env/v10"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
-	"os"
 )
 
 // Config represents the configuration settings for the application. It contains the following fields:
@@ -17,6 +18,7 @@ import (
 type Config struct {
 	LogLevel      string `env:"LOG_LEVEL" envDefault:"debug"`
 	Listen        string `env:"LISTEN" envDefault:"0.0.0.0:8080"`
+	GRPCListen    string `env:"GRPC_LISTEN" envDefault:"0.0.0.0:8181"`
 	FetchInterval int    `env:"FETCH_INTERVAL" envDefault:"5"`
 	MongoDBURL    string `env:"MONGODB_URI" envDefault:"mongodb://admin:password@mongodb:27017"`
 	DBName        string `env:"DB_NAME" envDefault:"fetcher"`

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package prices;
+option go_package = "/prices";
+
+message PricesRequest {
+  optional int32 since_date = 1;
+  repeated string currency = 2;
+}
+
+message PricesResponse {
+  int64 time_date = 1;
+  string price = 2;
+  string price_usd = 3;
+  string price_eur = 4;
+  string price_gbp = 5;
+}
+
+service PricesStreamingService {
+  //unary
+  rpc GetDataStreaming(PricesRequest) returns (stream PricesResponse) {}
+}
