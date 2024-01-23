@@ -117,7 +117,9 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			log.Info().Msgf("received rate %v", rate)
 			err = s.sendReceivedPrice(conn, rate, currency)
 		case errMsg := <-s.errorCh:
-			log.Err(errMsg).Msgf("something goes wrong with channel")
+			if errMsg != nil {
+				log.Err(errMsg).Msgf("something goes wrong with channel %s", errMsg)
+			}
 		}
 	}
 }
@@ -171,7 +173,10 @@ func (s *Server) runPipe() {
 				s.multi[s2] <- rate
 			}
 		case errMsg := <-s.errorCh:
-			log.Err(errMsg).Msgf("something goes wrong with channel")
+			if errMsg != nil {
+				log.Err(errMsg).Msgf("something goes wrong with channel %s", errMsg)
+			}
+
 		}
 	}
 }

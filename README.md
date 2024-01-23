@@ -1,3 +1,48 @@
+# Comments from Artem
+Completed and tagged with git. I decided to use websockets with channels, added an entity called prices_fetchers (interface to fetch prices), and a provider (implementor to actually request prices).
+A simple config was provided and a simple one-channel websocket server was created.
+
+Step 2:
+Since I don't really want to write migrations, I decided to use MongoDB over Postgres. It helped me avoid a lot of unnecessary conversions and migrations.
+Back-filing is connected with client/prices_fetcher.go and can be switched off with the `saveData` parameter (in case you want to run a few fetchers).
+I also fixed an issue with multiple clients connected to the same channel - I was using something similar to the Fan-in Fan-out pattern.
+Added a `since_date` parameter to the websocket so clients can fetch older data.
+
+Step 3:
+It was easy since I was using Mongo and storing the full structure. I just added filters to the websocket and a separate sending function.
+
+Step 4:
+I didn't fully understand what was required in this step, but I added a GRPC server (commented on main.go), added more unit tests, refactored channels, and added tests for the repository.
+
+Step 5:
+To detect failures, I would use Grafana logs with Opsgenie to identify any error messages in the logs.
+For security, I would add a handshake to the websocket, implement rate-limiting, and properly identify clients.
+For multiple instances, this service can be run in a few Pods over a load balancer. We just need to configure data storage.
+Since the source is not available, we can use a few patterns. One option is to use a backup source, and another option is to use previously cached data.
+
+Right now, the current service will identify every connection as a new user, so this can be improved to identify users (via source IP or handshake) and store the latest state of the user. This way, if a user suddenly disconnects and reconnects, we can resume from the old state.
+
+-> It's dockerized.
+-> GRPC server implemented (didn't implement the client).
+-> There is no CLI SDK, you can connect to websocket via
+
+`0.0.0.0:8080/ws?currency=USD&currency=GBP`
+
+`0.0.0.0:8080/ws`
+
+`0.0.0.0:8080/ws?since_date=1705938898&currency=EUR`
+
+.proto files also available outside of `internal` package, the server endpoint can be found in config.
+
+to run tests (docker required):
+
+`make test`
+
+to run server (docker required):
+
+`make up`
+
+
 # Home Assignment
 
 We want to build a price service that provides its users with the latest BTC price

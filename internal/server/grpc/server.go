@@ -75,7 +75,9 @@ func (s PricesServer) GetDataStreaming(req *pb.PricesRequest, srv pb.PricesStrea
 				log.Err(err).Msgf("error sending pricing data")
 			}
 		case errMsg := <-s.errorCh:
-			log.Err(errMsg).Msgf("something goes wrong with channel")
+			if errMsg != nil {
+				log.Err(errMsg).Msgf("something goes wrong with channel %s", errMsg)
+			}
 		}
 	}
 

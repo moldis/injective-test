@@ -12,7 +12,7 @@ import (
 
 const collection = "prices"
 
-//go:generate mockery --name=Prices --structname=MockPrices --outpkg=repository --output ./ --filename prices_mock.go
+//go:generate mockery --name=Prices --structname=MockPrices --outpkg=repository --output ./mocks --filename prices_mock.go
 type Prices interface {
 	Create(ctx context.Context, in *model.CurrentPrice) error
 	GetSinceDate(ctx context.Context, date time.Time) ([]*model.CurrentPrice, error)
